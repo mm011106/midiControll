@@ -6,15 +6,23 @@
 #
 #
 
+
+
 import time
 import rtmidi2
 
 def callback(msg, delta_time):
 	# print(msg, delta_time)
 	global pad
-	global pad_flag
-	global pad_mode
+	global PAD_FLAG
+	global PAD_MODE
+
 	global xypad_begin_at, xypad_currentry_at, xypad_flag
+
+	global fll_ib,fll_ofs, fll_ib_begin_at, fll_ofs_begin_at
+	global speed_factor
+
+	global ch,unit
 
 # MIDI message difinition
 	NOTE_ON=144
@@ -24,25 +32,29 @@ def callback(msg, delta_time):
 	CC_XYPAD_X_VALUE=1
 	CC_XYPAD_Y_VALUE=2
 
+# read keypads and xy-pads
 	if msg[0]==NOTE_ON:
 		note_number=msg[1]
 
 		try:
-			# print("Pad On:",pad[note_number][pad_name])
-			if pad[note_number][pad_mode]==SW_ALT:
-				pad[note_number][pad_flag]=not(pad[note_number][pad_flag])
+			# print("Pad On:",pad[note_number][PAD_NAME])
+			if pad[note_number][PAD_MODE]==SW_ALT:
+				pad[note_number][PAD_FLAG]=not(pad[note_number][PAD_FLAG])
 			else: # Momentary mode
-				pad[note_number][pad_flag]=True
+				pad[note_number][PAD_FLAG]=True
 		except KeyError as e:
 			print('No function related on the pad',e)
+
+		#  things to do at the onset of the note on
+		note_on_triggered_function()
 
 	elif msg[0]==NOTE_OFF:
 		note_number=msg[1]
 
 		try:
-			# print("Pad off:",pad[note_number][pad_name])
-			if pad[note_number][pad_mode]==SW_MOMENTARY:
-				pad[note_number][pad_flag]=False
+			# print("Pad off:",pad[note_number][PAD_NAME])
+			if pad[note_number][PAD_MODE]==SW_MOMENTARY:
+				pad[note_number][PAD_FLAG]=False
 		except KeyError as e:
 			print('No function related on the pad',e)
 
@@ -70,16 +82,107 @@ def callback(msg, delta_time):
 			xypad_begin_at['x']=xypad_currentry_at['x']
 			xypad_begin_at['y']=xypad_currentry_at['y']
 			xypad_flag = not xypad_flag
-			print('!!')
+			# print(fll_ib, fll_ofs , '!!')
+
+			fll_ofs_begin_at = fll_ofs
+			fll_ib_begin_at = fll_ib
+
+	midi_receive_triggered_function()
 
 
-def make_pad_state(pads):
-	global pad_name, pad_flag
+
+def midi_receive_triggered_function():
+
+	global pad
+	global PAD_FLAG,PAD_MODE
+
+	global xypad_begin_at, xypad_currentry_at, xypad_flag
+
+	global fll_ib,fll_ofs, fll_ib_begin_at, fll_ofs_begin_at
+	global speed_factor
+
+	global ch,unit
+
+# fine-coarse adjustment settings  Normally:Coarse, with Pad:Fine
+	if read_pad_state(pad)['fine']:
+		speed_factor=1
+	else:
+		speed_factor=8
+
+# Read XY-Pad
+	if xypad_flag:
+		dist = measure_distance(xypad_begin_at,xypad_currentry_at)
+
+		fll_ofs = dist[1]*speed_factor + fll_ofs_begin_at
+		#limitter range of 12bit
+		if fll_ofs>2047:
+			fll_ofs=2047
+		elif fll_ofs<-2048:
+			fll_ofs=-2048
+
+		fll_ib  = dist[0]*speed_factor + fll_ib_begin_at
+	#limitter range of 12bit
+		if fll_ib>4095:
+			fll_ib=4095
+		elif fll_ib<0:
+			fll_ib=0
+
+
+
+# Reset feedback loop
+	if read_pad_state(pad)['reset']:
+		set_pad_state_by_function_name(pad, 'int', False)
+		set_pad_state_by_function_name(pad, 'fb', False)
+		# set_pad_state_by_function_name(pad, '8hz', False)
+
+
+
+
+def note_on_triggered_function():
+
+	global pad
+	global PAD_FLAG
+	global PAD_MODE
+
+	global fll_ib,fll_ofs
+	global ch,unit
+
+	if read_pad_state(pad)['ch_up']:
+		ch+=1 if ch<15 else 0
+
+	if read_pad_state(pad)['ch_down']:
+		ch-=1 if ch>0 else 0
+
+	if read_pad_state(pad)['unit_up']:
+		unit+=1 if unit<15 else 0
+
+	if read_pad_state(pad)['unit_down']:
+		unit-=1 if unit>0 else 0
+
+	#reset ib, ofs value by user
+	if read_pad_state(pad)['zero'] and read_pad_state(pad)['reset']:
+		fll_ib=0
+		fll_ofs=0
+
+
+def read_pad_state(pads):
+	global PAD_NAME, PAD_FLAG
 	pad_state={}
 	for value in pads.values():
-		pad_state[value[pad_name]]=value[pad_flag]
+		pad_state[value[PAD_NAME]]=value[PAD_FLAG]
 
 	return pad_state  # returns Dic type value
+
+
+def set_pad_state_by_function_name(pad, func_name, state):
+	global PAD_NAME, PAD_MODE, PAD_FLAG
+
+	for note_number in pad.keys():
+		if pad[note_number][PAD_NAME]==func_name:
+			pad[note_number][PAD_FLAG]=state
+
+	return
+
 
 def measure_distance(start, now):  # args must be contain {'x': x_value, 'y': y:value}
 	global xypad_flag
@@ -100,6 +203,11 @@ SW_MOMENTARY=0
 # difinition of the pads functionality: NoteNumber:['name', swtch mode, initial vaule(boolean)]
 pad={
 36:['fine', SW_MOMENTARY, False],
+37:['zero', SW_MOMENTARY, False],
+38:['ch_down', SW_MOMENTARY, False],
+39:['ch_up', SW_MOMENTARY, False],
+40:['unit_down', SW_MOMENTARY, False],
+41:['unit_up', SW_MOMENTARY, False],
 42:['offset', SW_ALT, False],
 43:['ib', SW_ALT, False],
 44:['reset', SW_MOMENTARY, False],
@@ -109,13 +217,25 @@ pad={
 }
 
 # index num of the values of 'pad'
-pad_name=0
-pad_mode=1
-pad_flag=2
+PAD_NAME=0
+PAD_MODE=1
+PAD_FLAG=2
 
+# def values
 xypad_begin_at={}
 xypad_currentry_at={'x':-1,'y':-1}
 xypad_flag=False
+
+fll_ib=0
+fll_ofs=0
+
+ch=0
+unit=0
+
+speed_factor=1
+fll_ofs_begin_at=0
+fll_ib_begin_at=0
+
 
 if __name__=='__main__':
 
@@ -134,9 +254,11 @@ if __name__=='__main__':
 		raise(IOError("Input port not found."))
 
 	while True:
-		time.sleep(0.5)
-		print(measure_distance(xypad_begin_at,xypad_currentry_at))
-		pad_state = make_pad_state(pad)
+		time.sleep(0.2)
+		# print(measure_distance(xypad_begin_at,xypad_currentry_at))
+		print(fll_ib, fll_ofs)
+		print('unit:',unit,'   ','ch:',ch)
+		pad_state = read_pad_state(pad)
 		print(pad_state)
 
 		# print(flag)
