@@ -22,6 +22,8 @@ def callback(msg, delta_time):
 	global fll_ib,fll_ofs, fll_ib_begin_at, fll_ofs_begin_at
 	global speed_factor
 
+	global fll_ib, fll_ofs
+
 	global ch,unit
 
 # MIDI message difinition
@@ -100,6 +102,7 @@ def midi_receive_triggered_function():
 
 	global fll_ib,fll_ofs, fll_ib_begin_at, fll_ofs_begin_at
 	global speed_factor
+	global fll_ofs, fll_ib
 
 	global ch,unit
 
