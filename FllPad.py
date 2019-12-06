@@ -14,17 +14,8 @@ import rtmidi2
 def callback(msg, delta_time):
 	# print(msg, delta_time)
 	global pad
-	global PAD_FLAG
-	global PAD_MODE
-
-	global xypad_begin_at, xypad_currentry_at, xypad_flag
-
-	global fll_ib,fll_ofs, fll_ib_begin_at, fll_ofs_begin_at
-	global speed_factor
-
-	global fll_ib, fll_ofs
-
-	global ch,unit
+	global xypad
+	global PAD_FLAG, PAD_MODE
 
 # MIDI message difinition
 	NOTE_ON=144
@@ -67,44 +58,40 @@ def callback(msg, delta_time):
 		if controll_number == CC_XYPAD_TOUCH:
 			# print('XY-pad Touched:', cc_value==127)
 			if cc_value != 127:  # XYpad released : clear flag and position
-				xypad_begin_at={}
-				xypad_currentry_at={'x':-1,'y':-1}
-				xypad_flag=False
+				xypad['begin']={}
+				xypad['current']={'x':-1,'y':-1}
+				xypad['flag']=False
 
 		elif controll_number == CC_XYPAD_X_VALUE:
 			# print('X value', cc_value)
-			xypad_currentry_at['x']=cc_value
+			xypad['current']['x']=cc_value
 
 		elif controll_number == CC_XYPAD_Y_VALUE:
 			# print('Y value', cc_value)
-			xypad_currentry_at['y']=cc_value
+			xypad['current']['y']=cc_value
 
 		#	set start position and Now-Touching flag
-		if xypad_currentry_at['x']>0 and xypad_currentry_at['y']>0 and not(xypad_flag):
-			xypad_begin_at['x']=xypad_currentry_at['x']
-			xypad_begin_at['y']=xypad_currentry_at['y']
-			xypad_flag = not xypad_flag
-			# print(fll_ib, fll_ofs , '!!')
 
-			fll_ofs_begin_at = fll_ofs
-			fll_ib_begin_at = fll_ib
-
-	midi_receive_triggered_function()
+	midi_receive_triggered_function(pad, xypad)
 
 
 
-def midi_receive_triggered_function():
+def midi_receive_triggered_function(pad, xypad):
 
-	global pad
-	global PAD_FLAG,PAD_MODE
-
-	global xypad_begin_at, xypad_currentry_at, xypad_flag
-
-	global fll_ib,fll_ofs, fll_ib_begin_at, fll_ofs_begin_at
+	global fll_ib_begin_at, fll_ofs_begin_at
 	global speed_factor
-	global fll_ofs, fll_ib
 
-	global ch,unit
+	global fll_parameter
+
+# xypad is ready to use? (need intial positon)
+	if xypad['current']['x']>0 and xypad['current']['y']>0 and not(xypad['flag']):
+		xypad['begin']['x']=xypad['current']['x']
+		xypad['begin']['y']=xypad['current']['y']
+		xypad['flag'] = not xypad['flag']
+		# print(fll_ib, fll_ofs , '!!')
+
+		fll_ofs_begin_at = fll_parameter['ofs']
+		fll_ib_begin_at = fll_parameter['ib']
 
 # fine-coarse adjustment settings  Normally:Coarse, with Pad:Fine
 	if read_pad_state(pad)['fine']:
@@ -113,22 +100,22 @@ def midi_receive_triggered_function():
 		speed_factor=8
 
 # Read XY-Pad
-	if xypad_flag:
-		dist = measure_distance(xypad_begin_at,xypad_currentry_at)
+	if xypad['flag']:
+		dist = measure_distance(xypad)
 
-		fll_ofs = dist[1]*speed_factor + fll_ofs_begin_at
+		fll_parameter['ofs'] = dist[1]*speed_factor + fll_ofs_begin_at
 		#limitter range of 12bit
-		if fll_ofs>2047:
-			fll_ofs=2047
-		elif fll_ofs<-2048:
-			fll_ofs=-2048
+		if fll_parameter['ofs']>2047:
+			fll_parameter['ofs']=2047
+		elif fll_parameter['ofs']<-2048:
+			fll_parameter['ofs']=-2048
 
-		fll_ib  = dist[0]*speed_factor + fll_ib_begin_at
+		fll_parameter['ib']  = dist[0]*speed_factor + fll_ib_begin_at
 	#limitter range of 12bit
-		if fll_ib>4095:
-			fll_ib=4095
-		elif fll_ib<0:
-			fll_ib=0
+		if fll_parameter['ib']>4095:
+			fll_parameter['ib']=4095
+		elif fll_parameter['ib']<0:
+			fll_parameter['ib']=0
 
 
 
@@ -141,14 +128,7 @@ def midi_receive_triggered_function():
 
 
 
-def note_on_triggered_function():
-
-	global pad
-	global PAD_FLAG
-	global PAD_MODE
-
-	global fll_ib,fll_ofs
-	global ch,unit
+def note_on_triggered_function(pad, fll_parameter):
 
 	if read_pad_state(pad)['ch_up']:
 		ch+=1 if ch<15 else 0
@@ -164,12 +144,12 @@ def note_on_triggered_function():
 
 	#reset ib, ofs value by user
 	if read_pad_state(pad)['zero'] and read_pad_state(pad)['reset']:
-		fll_ib=0
-		fll_ofs=0
+		fll_parameter['ib']=0
+		fll_parameter['ofs']=0
 
 
 def read_pad_state(pads):
-	global PAD_NAME, PAD_FLAG
+	global PAD_NAME, PAD_MODE, PAD_FLAG
 	pad_state={}
 	for value in pads.values():
 		pad_state[value[PAD_NAME]]=value[PAD_FLAG]
@@ -187,15 +167,14 @@ def set_pad_state_by_function_name(pad, func_name, state):
 	return
 
 
-def measure_distance(start, now):  # args must be contain {'x': x_value, 'y': y:value}
-	global xypad_flag
+def measure_distance(xypad):  # args must be contain {'x': x_value, 'y': y:value}
 	dx=0
 	dy=0
 
-	if xypad_flag:
+	if xypad['flag']:
 		# print(start, now)
-		dx=now['x']-start['x']
-		dy=now['y']-start['y']
+		dx=xypad['current']['x']-xypad['begin']['x']
+		dy=xypad['current']['y']-xypad['begin']['y']
 
 	return dx,dy
 
@@ -225,15 +204,39 @@ PAD_MODE=1
 PAD_FLAG=2
 
 # def values
+
+xypad={
+'begin':{},
+'current':{'x':-1,'y':-1},
+'flag':False
+}
+
 xypad_begin_at={}
 xypad_currentry_at={'x':-1,'y':-1}
 xypad_flag=False
 
-fll_ib=0
-fll_ofs=0
 
-ch=0
-unit=0
+
+fll_parameter={
+'ch':0,
+'unit':0,
+'ofs':0,
+'ib':0,
+'en_ofs':False,
+'en_ib':False,
+'fb':False,
+'int':False,
+'8hz':False,
+'out_hi':False,
+'out_mid':False,
+'out_hi':False
+}
+
+# fll_ib=0
+# fll_ofs=0
+#
+# ch=0
+# unit=0
 
 speed_factor=1
 fll_ofs_begin_at=0
@@ -259,8 +262,8 @@ if __name__=='__main__':
 	while True:
 		time.sleep(0.2)
 		# print(measure_distance(xypad_begin_at,xypad_currentry_at))
-		print(fll_ib, fll_ofs)
-		print('unit:',unit,'   ','ch:',ch)
+		print(fll_parameter['ib'], fll_parameter['ofs'])
+		print('unit:',fll_parameter['unit'],'   ','ch:',fll_parameter['ch'])
 		pad_state = read_pad_state(pad)
 		print(pad_state)
 
