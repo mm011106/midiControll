@@ -9,6 +9,6 @@
 
 開発環境：
 - python3
-- rtmidi2 モジュール
+- rtmidi2 パッケージ
 
 テスト環境はWindows10上のVirtualBoxで動いている、ubuntu18.04.3
