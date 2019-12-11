@@ -39,7 +39,7 @@ def callback(msg, delta_time):
 			print('No function related on the pad',e)
 
 		#  things to do at the onset of the note on
-		note_on_triggered_function()
+		note_on_triggered_function(pad )
 
 	elif msg[0]==NOTE_OFF:
 		note_number=msg[1]
@@ -128,19 +128,20 @@ def midi_receive_triggered_function(pad, xypad):
 
 
 
-def note_on_triggered_function(pad, fll_parameter):
+def note_on_triggered_function(pad):
+	global fll_parameter
 
 	if read_pad_state(pad)['ch_up']:
-		ch+=1 if ch<15 else 0
+		fll_parameter['ch']+=1 if fll_parameter['ch']<15 else 0
 
 	if read_pad_state(pad)['ch_down']:
-		ch-=1 if ch>0 else 0
+		fll_parameter['ch']-=1 if fll_parameter['ch']>0 else 0
 
 	if read_pad_state(pad)['unit_up']:
-		unit+=1 if unit<15 else 0
+		fll_parameter['unit']+=1 if fll_parameter['unit']<15 else 0
 
 	if read_pad_state(pad)['unit_down']:
-		unit-=1 if unit>0 else 0
+		fll_parameter['unit']-=1 if fll_parameter['unit']>0 else 0
 
 	#reset ib, ofs value by user
 	if read_pad_state(pad)['zero'] and read_pad_state(pad)['reset']:
