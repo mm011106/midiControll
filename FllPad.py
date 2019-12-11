@@ -212,12 +212,6 @@ xypad={
 'flag':False
 }
 
-xypad_begin_at={}
-xypad_currentry_at={'x':-1,'y':-1}
-xypad_flag=False
-
-
-
 fll_parameter={
 'ch':0,
 'unit':0,
@@ -233,11 +227,6 @@ fll_parameter={
 'out_hi':False
 }
 
-# fll_ib=0
-# fll_ofs=0
-#
-# ch=0
-# unit=0
 
 speed_factor=1
 fll_ofs_begin_at=0
