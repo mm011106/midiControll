@@ -127,12 +127,16 @@ def midi_receive_triggered_function(pad, xypad):
 
 
 
-
 def note_on_triggered_function(pad):
 	global fll_parameter
+	global squid_parameter
+
+
 
 	if read_pad_state(pad)['ch_up']:
+		# squid_parameter[unit*16+ch]=[fll_parameter['ib'],fll_parameter['ofs']]
 		fll_parameter['ch']+=1 if fll_parameter['ch']<15 else 0
+		# fll_parameter['ib'], fll_parameter['ofs'] = squid_parameter[unit*16+ch]
 
 	if read_pad_state(pad)['ch_down']:
 		fll_parameter['ch']-=1 if fll_parameter['ch']>0 else 0
@@ -227,10 +231,15 @@ fll_parameter={
 'out_hi':False
 }
 
+for i in range(256):
+	squid_parameter={i:[0,0]}
+
 
 speed_factor=1
 fll_ofs_begin_at=0
 fll_ib_begin_at=0
+
+
 
 
 if __name__=='__main__':
