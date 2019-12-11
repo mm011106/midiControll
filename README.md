@@ -16,8 +16,8 @@
 
 Padアサイン：
 
-(ZERO)    CH-Up    UNIT-UP    Ib On/Off     NA        NA           NA          NA
- Fine     CH-Down  UNIT-Down  Ofs on/off  reset    FB on/off  integ on/off  8Hz on/off  
+|(ZERO)|CH-Up|UNIT-UP|Ib On/Off|NA|NA|NA|NA|
+|Fine|CH-Down|UNIT-Down|Ofs on/off|reset|FB on/off|integ on/off|8Hz on/off|  
  
 X-Y Pad:
  X:ib 
