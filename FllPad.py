@@ -72,11 +72,14 @@ def callback(msg, delta_time):
 
 		#	set start position and Now-Touching flag
 
-	midi_receive_triggered_function(pad, xypad)
+		cc_receive_triggered_function(pad, xypad)
+
+	midi_receive_triggered_function(fll_parameter,pad)
+
+	return True
 
 
-
-def midi_receive_triggered_function(pad, xypad):
+def cc_receive_triggered_function(pad, xypad):
 
 	global fll_ib_begin_at, fll_ofs_begin_at
 	global speed_factor
@@ -125,28 +128,73 @@ def midi_receive_triggered_function(pad, xypad):
 		set_pad_state_by_function_name(pad, 'fb', False)
 		# set_pad_state_by_function_name(pad, '8hz', False)
 
-
+	return True
 
 
 def note_on_triggered_function(pad):
 	global fll_parameter
+	global squid_parameter
+
+	ch   = fll_parameter['ch']
+	unit = fll_parameter['unit']
+
+	ib, ofs = [fll_parameter['ib'],fll_parameter['ofs']]
+
+	squid_parameter[unit*16+ch]=[ib,ofs]
 
 	if read_pad_state(pad)['ch_up']:
-		fll_parameter['ch']+=1 if fll_parameter['ch']<15 else 0
+		ch+=1 if ch<15 else 0
 
 	if read_pad_state(pad)['ch_down']:
-		fll_parameter['ch']-=1 if fll_parameter['ch']>0 else 0
+		ch-=1 if ch>0 else 0
 
 	if read_pad_state(pad)['unit_up']:
-		fll_parameter['unit']+=1 if fll_parameter['unit']<15 else 0
+		unit+=1 if unit<15 else 0
 
 	if read_pad_state(pad)['unit_down']:
-		fll_parameter['unit']-=1 if fll_parameter['unit']>0 else 0
+		unit-=1 if unit>0 else 0
+
+	[ib, ofs] = squid_parameter[unit*16+ch]
 
 	#reset ib, ofs value by user
 	if read_pad_state(pad)['zero'] and read_pad_state(pad)['reset']:
-		fll_parameter['ib']=0
-		fll_parameter['ofs']=0
+		ib  = 0
+		ofs = 0
+
+	if read_pad_state(pad)['extract']:
+		extract_squid_parameters(squid_parameter)
+
+	fll_parameter['ch'] = ch
+	fll_parameter['unit'] = unit
+
+	fll_parameter['ib'] = ib
+	fll_parameter['ofs'] = ofs
+
+	return True
+
+
+
+def midi_receive_triggered_function(fll_parameter,pad):
+
+	display_states(fll_parameter, pad)
+
+	return True
+
+def display_states(fll_parameter, pad):
+	print('unit:',fll_parameter['unit'],'   ','ch:',fll_parameter['ch'])
+	print('ib:',fll_parameter['ib'], '   ofs:',fll_parameter['ofs'])
+
+	print(read_pad_state(pad))
+
+	print()
+
+	return True
+
+
+def extract_squid_parameters(squid_parameter):
+	print(squid_parameter)
+
+	return True
 
 
 def read_pad_state(pads):
@@ -165,7 +213,7 @@ def set_pad_state_by_function_name(pad, func_name, state):
 		if pad[note_number][PAD_NAME]==func_name:
 			pad[note_number][PAD_FLAG]=state
 
-	return
+	return True
 
 
 def measure_distance(xypad):  # args must be contain {'x': x_value, 'y': y:value}
@@ -196,7 +244,8 @@ pad={
 44:['reset', SW_MOMENTARY, False],
 46:['fb', SW_ALT, False],
 48:['int', SW_ALT, False],
-50:['8hz', SW_ALT, False]
+50:['8hz', SW_ALT, False],
+51:['extract', SW_MOMENTARY, False]
 }
 
 # index num of the values of 'pad'
@@ -205,13 +254,14 @@ PAD_MODE=1
 PAD_FLAG=2
 
 # def values
-
+#  dictionary indicate current state of xy pad
 xypad={
 'begin':{},
 'current':{'x':-1,'y':-1},
 'flag':False
 }
 
+# initialize the array(dic) for storeing the state and parameters of current ch/unit
 fll_parameter={
 'ch':0,
 'unit':0,
@@ -228,9 +278,17 @@ fll_parameter={
 }
 
 
+# initialize the array(dic) for storeing ib, offset parameter
+squid_parameter={}
+for i in range(256):
+	squid_parameter[i]=[0,0]
+
+
 speed_factor=1
 fll_ofs_begin_at=0
 fll_ib_begin_at=0
+
+
 
 
 if __name__=='__main__':
@@ -250,11 +308,11 @@ if __name__=='__main__':
 		raise(IOError("Input port not found."))
 
 	while True:
-		time.sleep(0.2)
+		time.sleep(1)
 		# print(measure_distance(xypad_begin_at,xypad_currentry_at))
-		print(fll_parameter['ib'], fll_parameter['ofs'])
-		print('unit:',fll_parameter['unit'],'   ','ch:',fll_parameter['ch'])
-		pad_state = read_pad_state(pad)
-		print(pad_state)
+		# print(fll_parameter['ib'], fll_parameter['ofs'])
+		# print('unit:',fll_parameter['unit'],'   ','ch:',fll_parameter['ch'])
+		# pad_state = read_pad_state(pad)
+		# print(pad_state)
 
 		# print(flag)
