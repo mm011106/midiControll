@@ -131,26 +131,40 @@ def note_on_triggered_function(pad):
 	global fll_parameter
 	global squid_parameter
 
+	ch   = fll_parameter['ch']
+	unit = fll_parameter['unit']
 
+	ib, ofs = [fll_parameter['ib'],fll_parameter['ofs']]
+
+	print(squid_parameter[unit*16+ch])
+	squid_parameter[unit*16+ch]=[ib,ofs]
 
 	if read_pad_state(pad)['ch_up']:
-		# squid_parameter[unit*16+ch]=[fll_parameter['ib'],fll_parameter['ofs']]
-		fll_parameter['ch']+=1 if fll_parameter['ch']<15 else 0
-		# fll_parameter['ib'], fll_parameter['ofs'] = squid_parameter[unit*16+ch]
+		ch+=1 if ch<15 else 0
+		ib,ofs =squid_parameter[unit*16+ch]
 
 	if read_pad_state(pad)['ch_down']:
-		fll_parameter['ch']-=1 if fll_parameter['ch']>0 else 0
+		ch-=1 if ch>0 else 0
 
 	if read_pad_state(pad)['unit_up']:
-		fll_parameter['unit']+=1 if fll_parameter['unit']<15 else 0
+		unit+=1 if unit<15 else 0
 
 	if read_pad_state(pad)['unit_down']:
-		fll_parameter['unit']-=1 if fll_parameter['unit']>0 else 0
+		unit-=1 if unit>0 else 0
+
+	[ib, ofs] = squid_parameter[unit*16+ch]
 
 	#reset ib, ofs value by user
 	if read_pad_state(pad)['zero'] and read_pad_state(pad)['reset']:
-		fll_parameter['ib']=0
-		fll_parameter['ofs']=0
+		ib  = 0
+		ofs = 0
+
+	fll_parameter['ch'] = ch
+	fll_parameter['unit'] = unit
+
+	fll_parameter['ib'] = ib
+	fll_parameter['ofs'] = ofs
+
 
 
 def read_pad_state(pads):
@@ -231,8 +245,9 @@ fll_parameter={
 'out_hi':False
 }
 
+squid_parameter={}
 for i in range(256):
-	squid_parameter={i:[0,0]}
+	squid_parameter[i]=[0,0]
 
 
 speed_factor=1
