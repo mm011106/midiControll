@@ -76,6 +76,8 @@ def callback(msg, delta_time):
 
 	midi_receive_triggered_function(fll_parameter,pad)
 
+	return True
+
 
 def cc_receive_triggered_function(pad, xypad):
 
@@ -126,6 +128,7 @@ def cc_receive_triggered_function(pad, xypad):
 		set_pad_state_by_function_name(pad, 'fb', False)
 		# set_pad_state_by_function_name(pad, '8hz', False)
 
+	return True
 
 
 def note_on_triggered_function(pad):
@@ -167,10 +170,15 @@ def note_on_triggered_function(pad):
 	fll_parameter['ib'] = ib
 	fll_parameter['ofs'] = ofs
 
+	return True
+
+
+
 def midi_receive_triggered_function(fll_parameter,pad):
 
 	display_states(fll_parameter, pad)
 
+	return True
 
 def display_states(fll_parameter, pad):
 	print('unit:',fll_parameter['unit'],'   ','ch:',fll_parameter['ch'])
@@ -180,8 +188,14 @@ def display_states(fll_parameter, pad):
 
 	print()
 
+	return True
+
+
 def extract_squid_parameters(squid_parameter):
 	print(squid_parameter)
+
+	return True
+
 
 def read_pad_state(pads):
 	global PAD_NAME, PAD_MODE, PAD_FLAG
@@ -199,7 +213,7 @@ def set_pad_state_by_function_name(pad, func_name, state):
 		if pad[note_number][PAD_NAME]==func_name:
 			pad[note_number][PAD_FLAG]=state
 
-	return
+	return True
 
 
 def measure_distance(xypad):  # args must be contain {'x': x_value, 'y': y:value}
