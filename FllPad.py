@@ -136,7 +136,6 @@ def note_on_triggered_function(pad):
 
 	ib, ofs = [fll_parameter['ib'],fll_parameter['ofs']]
 
-	print(squid_parameter[unit*16+ch])
 	squid_parameter[unit*16+ch]=[ib,ofs]
 
 	if read_pad_state(pad)['ch_up']:
@@ -222,13 +221,14 @@ PAD_MODE=1
 PAD_FLAG=2
 
 # def values
-
+#  dictionary indicate current state of xy pad
 xypad={
 'begin':{},
 'current':{'x':-1,'y':-1},
 'flag':False
 }
 
+# initialize the array(dic) for storeing the state and parameters of current ch/unit
 fll_parameter={
 'ch':0,
 'unit':0,
@@ -244,6 +244,8 @@ fll_parameter={
 'out_hi':False
 }
 
+
+# initialize the array(dic) for storeing ib, offset parameter
 squid_parameter={}
 for i in range(256):
 	squid_parameter[i]=[0,0]
