@@ -141,7 +141,6 @@ def note_on_triggered_function(pad):
 
 	if read_pad_state(pad)['ch_up']:
 		ch+=1 if ch<15 else 0
-		ib,ofs =squid_parameter[unit*16+ch]
 
 	if read_pad_state(pad)['ch_down']:
 		ch-=1 if ch>0 else 0
