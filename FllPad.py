@@ -72,11 +72,12 @@ def callback(msg, delta_time):
 
 		#	set start position and Now-Touching flag
 
-	midi_receive_triggered_function(pad, xypad)
+		cc_receive_triggered_function(pad, xypad)
+
+	midi_receive_triggered_function(fll_parameter,pad)
 
 
-
-def midi_receive_triggered_function(pad, xypad):
+def cc_receive_triggered_function(pad, xypad):
 
 	global fll_ib_begin_at, fll_ofs_begin_at
 	global speed_factor
@@ -157,13 +158,30 @@ def note_on_triggered_function(pad):
 		ib  = 0
 		ofs = 0
 
+	if read_pad_state(pad)['extract']:
+		extract_squid_parameters(squid_parameter)
+
 	fll_parameter['ch'] = ch
 	fll_parameter['unit'] = unit
 
 	fll_parameter['ib'] = ib
 	fll_parameter['ofs'] = ofs
 
+def midi_receive_triggered_function(fll_parameter,pad):
 
+	display_states(fll_parameter, pad)
+
+
+def display_states(fll_parameter, pad):
+	print('unit:',fll_parameter['unit'],'   ','ch:',fll_parameter['ch'])
+	print('ib:',fll_parameter['ib'], '   ofs:',fll_parameter['ofs'])
+
+	print(read_pad_state(pad))
+
+	print()
+
+def extract_squid_parameters(squid_parameter):
+	print(squid_parameter)
 
 def read_pad_state(pads):
 	global PAD_NAME, PAD_MODE, PAD_FLAG
@@ -212,7 +230,8 @@ pad={
 44:['reset', SW_MOMENTARY, False],
 46:['fb', SW_ALT, False],
 48:['int', SW_ALT, False],
-50:['8hz', SW_ALT, False]
+50:['8hz', SW_ALT, False],
+51:['extract', SW_MOMENTARY, False]
 }
 
 # index num of the values of 'pad'
@@ -275,11 +294,11 @@ if __name__=='__main__':
 		raise(IOError("Input port not found."))
 
 	while True:
-		time.sleep(0.2)
+		time.sleep(1)
 		# print(measure_distance(xypad_begin_at,xypad_currentry_at))
-		print(fll_parameter['ib'], fll_parameter['ofs'])
-		print('unit:',fll_parameter['unit'],'   ','ch:',fll_parameter['ch'])
-		pad_state = read_pad_state(pad)
-		print(pad_state)
+		# print(fll_parameter['ib'], fll_parameter['ofs'])
+		# print('unit:',fll_parameter['unit'],'   ','ch:',fll_parameter['ch'])
+		# pad_state = read_pad_state(pad)
+		# print(pad_state)
 
 		# print(flag)
