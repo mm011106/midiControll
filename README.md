@@ -15,11 +15,21 @@
 
 ### ライブラリ等
 
+rtmidi2 をインストールする前に下記のライブラリが必要
 
-```sudo apt-get install libasound2-dev
+```
+sudo apt-get install libasound2-dev
 
 sudo apt-get install libjack-jackd2-dev
+
 ```
+### rtmidi2　のインストール
+
+https://github.com/gesellkammer/rtmidi2.git
+
+clone して
+``` sudo python3 setup.py install ```
+
 
 ## 使い方
 
