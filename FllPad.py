@@ -36,7 +36,8 @@ def callback(msg, delta_time):
 			else: # Momentary mode
 				pad[note_number][PAD_FLAG]=True
 		except KeyError as e:
-			print('No function related on the pad',e)
+			#print('No function related on the pad',e)
+			print('\r',end="")
 
 		#  things to do at the onset of the note on
 		note_on_triggered_function(pad )
@@ -49,7 +50,8 @@ def callback(msg, delta_time):
 			if pad[note_number][PAD_MODE]==SW_MOMENTARY:
 				pad[note_number][PAD_FLAG]=False
 		except KeyError as e:
-			print('No function related on the pad',e)
+			#print('No function related on the pad',e)
+			print('\r',end="")
 
 	elif msg[0]==CC:
 		controll_number=msg[1]
@@ -181,12 +183,16 @@ def midi_receive_triggered_function(fll_parameter,pad):
 	return True
 
 def display_states(fll_parameter, pad):
-	print('unit:',fll_parameter['unit'],'   ','ch:',fll_parameter['ch'])
-	print('ib:',fll_parameter['ib'], '   ofs:',fll_parameter['ofs'])
-
-	print(read_pad_state(pad))
-
+	show=["ib","offset","fb","int","8hz"]
+	
+	print('unit:{:>3}   ch:{:>3}'.format(fll_parameter['unit'],fll_parameter['ch']))
+	print('ib:{:>5}   ofs:{:>5}'.format(fll_parameter['ib'],fll_parameter['ofs']))
 	print()
+	
+	for parameter in show:
+		print('{:<6} - {:<6}'.format(parameter,'ON' if read_pad_state(pad)[parameter] else 'Off'))
+
+	print("\033[9A")
 
 	return True
 
@@ -304,6 +310,9 @@ if __name__=='__main__':
 		index = midi_in.ports_matching(device_name+"*")[0]
 		input_port=midi_in.open_port(index)
 		print(index)
+		print()
+		print()
+
 	except indexError:
 		raise(IOError("Input port not found."))
 
