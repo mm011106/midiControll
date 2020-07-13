@@ -16,7 +16,10 @@
 ### ライブラリ等
 
 
-```sudo apt-get install libasound2-dev```
+```sudo apt-get install libasound2-dev
+
+sudo apt-get install libjack-jackd2-dev
+```
 
 ## 使い方
 
