@@ -13,6 +13,12 @@
 
 テスト環境はWindows10上のVirtualBoxで動いている、ubuntu18.04.3
 
+### ライブラリ等
+
+
+```sudo apt-get install libasound2-dev```
+
+## 使い方
 
 ### Padアサイン：
 
