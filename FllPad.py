@@ -10,6 +10,7 @@
 
 import time
 import rtmidi2
+import json
 
 def callback(msg, delta_time):
 	# print(msg, delta_time)
@@ -184,11 +185,11 @@ def midi_receive_triggered_function(fll_parameter,pad):
 
 def display_states(fll_parameter, pad):
 	show=["ib","offset","fb","int","8hz"]
-	
+
 	print('unit:{:>3}   ch:{:>3}'.format(fll_parameter['unit'],fll_parameter['ch']))
 	print('ib:{:>5}   ofs:{:>5}'.format(fll_parameter['ib'],fll_parameter['ofs']))
 	print()
-	
+
 	for parameter in show:
 		print('{:<6} - {:<6}'.format(parameter,'ON' if read_pad_state(pad)[parameter] else 'Off'))
 
@@ -198,7 +199,9 @@ def display_states(fll_parameter, pad):
 
 
 def extract_squid_parameters(squid_parameter):
-	print(squid_parameter)
+	# print(squid_parameter)
+	with open('para.txt', mode='w') as f:
+		json.dump(squid_parameter,f)
 
 	return True
 
