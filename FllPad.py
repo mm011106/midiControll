@@ -11,6 +11,7 @@
 import time
 import rtmidi2
 import json
+import spidev
 
 def callback(msg, delta_time):
 	# print(msg, delta_time)
@@ -173,6 +174,14 @@ def note_on_triggered_function(pad):
 	fll_parameter['ib'] = ib
 	fll_parameter['ofs'] = ofs
 
+	fll_parameter['en_ib']=read_pad_state(pad)['ib']
+	fll_parameter['en_ofs']=read_pad_state(pad)['offset']
+	fll_parameter['fb']=read_pad_state(pad)['fb']
+	fll_parameter['int']=read_pad_state(pad)['int']
+	fll_parameter['8hz']=read_pad_state(pad)['8hz']
+
+	spi_send(fll_parameter)
+
 	return True
 
 
@@ -236,6 +245,33 @@ def measure_distance(xypad):  # args must be contain {'x': x_value, 'y': y:value
 
 	return dx,dy
 
+def spi_send(fll_parameter):
+	global spi
+
+	#spi.writebytes([0x11,0x22,0x33,0x44])
+	
+	payload=[0,0,0,0]	
+	payload[0]=fll_parameter['unit']
+	payload[1]=fll_parameter['ch']
+
+	payload[2], payload[3]=divmod(fll_parameter['ib'], 256)
+	spi.writebytes([payload[0],payload[1]+0x00,payload[2],payload[3]])
+
+	payload[2], payload[3]=divmod(fll_parameter['ofs']+2048, 256)
+	spi.writebytes([payload[0],payload[1]+0x10,payload[2],payload[3]])
+	
+	payload[1]=0x30
+	payload[2]=(fll_parameter['en_ofs']*2 + fll_parameter['en_ib'])*16
+	payload[3]=(fll_parameter['int']*4 + fll_parameter['fb']*2 + 1)*16
+	spi.writebytes(payload)
+	
+	payload[1]=0x50
+	payload[2]=0x00
+	payload[3]=(fll_parameter['8hz'])
+	spi.writebytes(payload)
+		
+	return True
+
 # switch mode difinition
 SW_ALT=1
 SW_MOMENTARY=0
@@ -297,8 +333,15 @@ speed_factor=1
 fll_ofs_begin_at=0
 fll_ib_begin_at=0
 
+spi=spidev.SpiDev()
 
+spi.open(0,0)
 
+spi.max_speed_hz = 100000
+spi.mode = 1
+# data valid at negative edge of the CLK
+spi.cshigh = True
+# configure CS0 as active high
 
 if __name__=='__main__':
 
