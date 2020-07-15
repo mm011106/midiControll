@@ -368,6 +368,9 @@ if __name__=='__main__':
 		with open('para.txt', mode='r') as f:
 			json.load(squid_parameter,f)
 
+	except IOError:
+		print("No files found")
+
 	while True:
 		time.sleep(1)
 		# print(measure_distance(xypad_begin_at,xypad_currentry_at))
