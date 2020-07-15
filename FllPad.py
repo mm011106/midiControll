@@ -124,22 +124,21 @@ def cc_receive_triggered_function(pad, xypad):
 		elif fll_parameter['ib']<0:
 			fll_parameter['ib']=0
 
-
-
-	# Reset feedback loop
-	# if read_pad_state(pad)['reset']:
-	# 	set_pad_state_by_function_name(pad, 'int', False)
-	# 	set_pad_state_by_function_name(pad, 'fb', False)
-	# 	# set_pad_state_by_function_name(pad, '8hz', False)
-
 	spi_send(fll_parameter)
 
 	return True
 
 
 def note_on_triggered_function(pad):
+# ノートオンでトリガされる関数
+# padの状態を読んで、現在のFLLパラメタを格納する変数(fll_prameter）に書き出す
+# さらに、それをSPIで送信する
+
 	global fll_parameter
 	global squid_parameter
+
+	CH_MAX = 15
+	UNIT_MAX = 255
 
 	ch   = fll_parameter['ch']
 	unit = fll_parameter['unit']
@@ -149,13 +148,13 @@ def note_on_triggered_function(pad):
 	squid_parameter[unit*16+ch]=[ib,ofs]
 
 	if read_pad_state(pad)['ch_up']:
-		ch+=1 if ch<15 else 0
+		ch+=1 if ch<CH_MAX else 0
 
 	if read_pad_state(pad)['ch_down']:
 		ch-=1 if ch>0 else 0
 
 	if read_pad_state(pad)['unit_up']:
-		unit+=1 if unit<15 else 0
+		unit+=1 if unit<UNIT_MAX else 0
 
 	if read_pad_state(pad)['unit_down']:
 		unit-=1 if unit>0 else 0
