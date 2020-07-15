@@ -138,7 +138,7 @@ def note_on_triggered_function(pad):
 	global squid_parameter
 
 	CH_MAX = 15
-	UNIT_MAX = 255
+	UNIT_MAX = 15 
 
 	ch   = fll_parameter['ch']
 	unit = fll_parameter['unit']
@@ -363,13 +363,6 @@ if __name__=='__main__':
 
 	except indexError:
 		raise(IOError("Input port not found."))
-
-	try:
-		with open('para.txt', mode='r') as f:
-			squid_parameter = json.load(f)
-
-	except IOError:
-		print("No files found")
 
 	while True:
 		time.sleep(1)
