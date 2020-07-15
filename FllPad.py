@@ -126,11 +126,13 @@ def cc_receive_triggered_function(pad, xypad):
 
 
 
-# Reset feedback loop
+	# Reset feedback loop
 	if read_pad_state(pad)['reset']:
 		set_pad_state_by_function_name(pad, 'int', False)
 		set_pad_state_by_function_name(pad, 'fb', False)
 		# set_pad_state_by_function_name(pad, '8hz', False)
+
+	spi_send(fll_parameter)
 
 	return True
 
@@ -249,8 +251,8 @@ def spi_send(fll_parameter):
 	global spi
 
 	#spi.writebytes([0x11,0x22,0x33,0x44])
-	
-	payload=[0,0,0,0]	
+
+	payload=[0,0,0,0]
 	payload[0]=fll_parameter['unit']
 	payload[1]=fll_parameter['ch']
 
@@ -259,17 +261,17 @@ def spi_send(fll_parameter):
 
 	payload[2], payload[3]=divmod(fll_parameter['ofs']+2048, 256)
 	spi.writebytes([payload[0],payload[1]+0x10,payload[2],payload[3]])
-	
+
 	payload[1]=0x30
 	payload[2]=(fll_parameter['en_ofs']*2 + fll_parameter['en_ib'])*16
 	payload[3]=(fll_parameter['int']*4 + fll_parameter['fb']*2 + 1)*16
 	spi.writebytes(payload)
-	
+
 	payload[1]=0x50
 	payload[2]=0x00
 	payload[3]=(fll_parameter['8hz'])
 	spi.writebytes(payload)
-		
+
 	return True
 
 # switch mode difinition
@@ -340,6 +342,7 @@ spi.open(0,0)
 spi.max_speed_hz = 100000
 spi.mode = 1
 # data valid at negative edge of the CLK
+
 spi.cshigh = True
 # configure CS0 as active high
 
