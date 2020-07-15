@@ -366,7 +366,7 @@ if __name__=='__main__':
 
 	try:
 		with open('para.txt', mode='r') as f:
-			json.load(squid_parameter,f)
+			squid_parameter = json.load(f)
 
 	except IOError:
 		print("No files found")
