@@ -127,10 +127,10 @@ def cc_receive_triggered_function(pad, xypad):
 
 
 	# Reset feedback loop
-	if read_pad_state(pad)['reset']:
-		set_pad_state_by_function_name(pad, 'int', False)
-		set_pad_state_by_function_name(pad, 'fb', False)
-		# set_pad_state_by_function_name(pad, '8hz', False)
+	# if read_pad_state(pad)['reset']:
+	# 	set_pad_state_by_function_name(pad, 'int', False)
+	# 	set_pad_state_by_function_name(pad, 'fb', False)
+	# 	# set_pad_state_by_function_name(pad, '8hz', False)
 
 	spi_send(fll_parameter)
 
